@@ -1,7 +1,0 @@
-What's Still Pending
-Item	Status	Notes
-Currency in UI display labels	Partial	Proposals, KPIs, insights cards still show "AED" string — needs currencyCode prop threaded through
-Dubai area cluster strings in market-setup	Pending	Lines 98–103 still have "Dubai Marina, JBR…" / "Downtown Dubai, DIFC…" cluster names — should be removed or made generic since searchClusters now comes from listing.area directly
-LOS_DISCOUNT nightly stacking	Pending	Engine notes discounts but doesn't apply them per-night
-Velocity/booking-pace signal in last-minute	Pending	Ramp curve done; urgency signal not wired
-Portfolio-level occupancy rules	Pending	Per-listing done; cross-listing portfolio pending
