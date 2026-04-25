@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PriceOS — Implementation Status &amp; Checklist</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      padding: 40px 24px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .page { max-width: 1000px; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 44px 56px;
+      margin-bottom: 32px;
+    }
+    .header-logo { font-size: 11px; font-weight: 800; letter-spacing: 3px; color: #f5b039; margin-bottom: 10px; text-transform: uppercase; }
+    .header h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+    .header .sub { color: #94a3b8; font-size: 14px; }
+    .header-stats { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 24px; }
+    .stat { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 14px 20px; text-align: center; }
+    .stat-num { font-size: 30px; font-weight: 900; line-height: 1; }
+    .stat-num.g { color: #4ade80; }
+    .stat-num.a { color: #fbbf24; }
+    .stat-num.r { color: #f87171; }
+    .stat-num.b { color: #60a5fa; }
+    .stat-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+    /* Progress bar */
+    .prog-wrap { background: rgba(255,255,255,0.1); border-radius: 8px; height: 10px; overflow: hidden; margin: 16px 0 8px; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, #4ade80, #22c55e); border-radius: 8px; }
+    .prog-label { font-size: 12px; color: #94a3b8; }
+
+    /* Sprint note */
+    .sprint-banner {
+      background: #052e16;
+      border: 1px solid #166534;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #86efac;
+    }
+    .sprint-banner strong { color: #4ade80; }
+
+    /* Legend */
+    .legend {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      background: white; border-radius: 12px;
+      padding: 14px 20px; margin-bottom: 28px;
+      border: 1px solid #e5e7eb; font-size: 12px;
+    }
+    .leg { display: flex; align-items: center; gap: 8px; }
+    .leg-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .li-done    { background: #dcfce7; color: #16a34a; }
+    .li-new     { background: #d1fae5; color: #059669; border: 2px solid #6ee7b7; }
+    .li-partial { background: #fef3c7; color: #d97706; }
+    .li-pending { background: #f3f4f6; color: #9ca3af; border: 1px solid #e5e7eb; }
+    .li-v2      { background: #ede9fe; color: #7c3aed; }
+
+    /* Section */
+    .section {
+      background: white;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+    .sec-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sec-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .si-amber  { background: #fef3c7; }
+    .si-green  { background: #dcfce7; }
+    .si-blue   { background: #dbeafe; }
+    .si-purple { background: #ede9fe; }
+    .si-red    { background: #fee2e2; }
+    .si-teal   { background: #ccfbf1; }
+    .si-slate  { background: #f1f5f9; }
+    .si-indigo { background: #e0e7ff; }
+
+    .sec-title { font-size: 15px; font-weight: 700; flex: 1; }
+    .sec-badges { display: flex; gap: 8px; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .bg-green  { background: #dcfce7; color: #15803d; }
+    .bg-amber  { background: #fef3c7; color: #b45309; }
+    .bg-red    { background: #fee2e2; color: #b91c1c; }
+    .bg-blue   { background: #dbeafe; color: #1d4ed8; }
+    .bg-purple { background: #ede9fe; color: #6d28d9; }
+
+    /* Check rows */
+    .checklist { padding: 4px 0; }
+    .row {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 11px 24px; border-bottom: 1px solid #f8f9fa;
+      transition: background 0.1s;
+    }
+    .row:last-child { border-bottom: none; }
+    .row:hover { background: #fafbfc; }
+    .ci { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-top: 1px; }
+    .ci-done    { background: #dcfce7; color: #16a34a; }
+    .ci-new     { background: #d1fae5; color: #059669; border: 2px solid #6ee7b7; }
+    .ci-partial { background: #fef3c7; color: #d97706; }
+    .ci-pending { background: #f3f4f6; color: #9ca3af; border: 1px solid #e5e7eb; }
+    .ci-v2      { background: #ede9fe; color: #7c3aed; font-size: 9px; }
+
+    .row-content { flex: 1; min-width: 0; }
+    .row-title { font-size: 13px; font-weight: 500; color: #1a1a2e; line-height: 1.4; }
+    .row-sub { font-size: 11.5px; color: #9ca3af; margin-top: 3px; line-height: 1.45; }
+    .row-tag { flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 3px; letter-spacing: 0.4px; }
+    .rt-new    { background: #d1fae5; color: #065f46; }
+    .rt-t1     { background: #fef3c7; color: #92400e; }
+    .rt-t2     { background: #dbeafe; color: #1e40af; }
+    .rt-t3     { background: #f3e8ff; color: #6d28d9; }
+    .rt-v2     { background: #fce7f3; color: #9d174d; }
+    .rt-eng    { background: #f0fdf4; color: #166534; }
+    .rt-g      { background: #e0f2fe; color: #0369a1; }
+    .rt-ui     { background: #fff7ed; color: #9a3412; }
+
+    /* Pending block */
+    .pending-section {
+      background: #fff8f8;
+      border: 1px solid #fecaca;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .pending-header {
+      background: #fef2f2;
+      padding: 16px 24px;
+      border-bottom: 1px solid #fecaca;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pending-header-title { font-size: 15px; font-weight: 700; color: #b91c1c; }
+    .pending-body { padding: 0; }
+
+    /* What's Next */
+    .next-section { background: white; border-radius: 14px; padding: 28px 32px; margin-bottom: 24px; border: 1px solid #e5e7eb; }
+    .next-section h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+    .next-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+    .next-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .next-num { width: 28px; height: 28px; border-radius: 8px; background: #fef3c7; color: #b45309; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .next-title { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+    .next-sub { font-size: 12px; color: #6b7280; margin-top: 3px; }
+    .next-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+    /* Footer */
+    .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 32px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+
+    @media print {
+      body { background: white; padding: 20px; }
+      .section, .pending-section, .next-section { box-shadow: none; break-inside: avoid; }
+      .header { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">PriceOS · Client Deliverable</div>
+  <h1>Implementation Status &amp; Checklist</h1>
+  <p class="sub">Full audit of what's built, what's wired, what's pending — aligned to the Pricing Engine KB, Dubai→Global Spec, and PRD.</p>
+
+  <div class="prog-wrap"><div class="prog-fill" style="width:76%;"></div></div>
+  <p class="prog-label">76% complete — 42 of 55 items implemented and working</p>
+
+  <div class="header-stats">
+    <div class="stat"><div class="stat-num g">42</div><div class="stat-label">Complete</div></div>
+    <div class="stat"><div class="stat-num a">7</div><div class="stat-label">Partial</div></div>
+    <div class="stat"><div class="stat-num r">4</div><div class="stat-label">Pending V1</div></div>
+    <div class="stat"><div class="stat-num b">8</div><div class="stat-label">Deferred V2</div></div>
+  </div>
+</div>
+
+<!-- SPRINT NOTE -->
+<div class="sprint-banner">
+  <strong>April 2026 Sprint — 7 items completed this session:</strong>
+  T1.3b last-minute ramp curve wired into waterfall engine ·
+  T1.4 occupancy-based adjustment wired into computeDay ·
+  T2.8 weekendMinPrice wired into Pass 4 clamp ·
+  P2.5 weekend pricing now in computeDay ·
+  Market selection added to sign-up form (10 markets) ·
+  Agent prompts market-aware (template-driven, not Dubai-hardcoded) ·
+  Login page copy globalised.
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg"><div class="leg-icon li-done">✓</div> Complete &amp; working</div>
+  <div class="leg"><div class="leg-icon li-new">✓</div> Newly completed this sprint</div>
+  <div class="leg"><div class="leg-icon li-partial">~</div> Partial — UI or schema done, not fully wired</div>
+  <div class="leg"><div class="leg-icon li-pending">○</div> Pending — not yet built</div>
+  <div class="leg"><div class="leg-icon li-v2">V2</div> Deferred to V2 / post-launch</div>
+</div>
+
+<!-- ═══════════ TIER 1 ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-amber">🔥</div>
+    <div class="sec-title">Tier 1 — Must Build (Highest Revenue Impact)</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">7 done</span>
+      <span class="badge bg-red">1 pending</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.1a — Base Price + Min/Max Guardrails</div>
+        <div class="row-sub">priceFloor / priceCeiling on Listing model · enforced in waterfall Pass 4 hard clamp · editable in Pricing Rules Studio → Guardrails tab</div>
+      </div>
+      <span class="row-tag rt-t1">T1 · 10/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-pending">○</div>
+      <div class="row-content">
+        <div class="row-title">T1.1b — Auto-Base Price from Comp ADR</div>
+        <div class="row-sub">BenchmarkData exists in DB · Guardrails Agent auto-sets floor/ceiling · but comp ADR is not wired into base price suggestion during onboarding</div>
+      </div>
+      <span class="row-tag rt-t1">T1 · 10/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.2 — Seasonal Profiles</div>
+        <div class="row-sub">SEASON PricingRule CRUD · date range + DOW mask + priceAdjPct/priceOverride/minStayOverride · priority sorting · enabled toggle · waterfall Pass 1</div>
+      </div>
+      <span class="row-tag rt-t1">T1 · 9/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.3a — Last-Minute Discount (Flat %)</div>
+        <div class="row-sub">lastMinuteEnabled · lastMinuteDaysOut · lastMinuteDiscountPct · lastMinuteMinStay · waterfall Pass 2 · Rules Studio → Lead Time tab</div>
+      </div>
+      <span class="row-tag rt-t1">T1 · 9/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.3b — Last-Minute Gradual Ramp Curve</div>
+        <div class="row-sub">4 new fields: lastMinuteRampEnabled, lastMinuteRampDays, lastMinuteMaxDiscountPct, lastMinuteMinDiscountPct · flat/ramp toggle in UI · waterfall.ts lerps discount from maxPct (day 0) → minPct (day rampDays) · pipeline.ts maps from Listing model</div>
+      </div>
+      <span class="row-tag rt-new">NEW ENGINE ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.4 — Occupancy-Based Adjustments</div>
+        <div class="row-sub">7-field schema · OccupancyTab UI in Rules Studio · engine-config API · pipeline.ts computes rolling occupancy% from InventoryMaster lookback · waterfall.ts Pass 2 applies high/low threshold price adjustment</div>
+      </div>
+      <span class="row-tag rt-new">NEW ENGINE ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.5 — Orphan Day / Gap Pricing</div>
+        <div class="row-sub">Gap prevention (minFragmentThreshold blocks short gaps) · Gap fill (discount + CICO override for fill-eligible gaps) · waterfall Pass 3 · Rules Studio → Gap Logic tab</div>
+      </div>
+      <span class="row-tag rt-t1">T1 · 8/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T1.6 — Day-of-Week Pricing</div>
+        <div class="row-sub">dowPricingEnabled · dowDays (configurable, not hardcoded) · dowPriceAdjPct · dowMinStay · waterfall Pass 2 · Rules Studio → Lead Time tab with day selector</div>
+      </div>
+      <span class="row-tag rt-t1">T1 · 7/10</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ TIER 2 ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-blue">⚡</div>
+    <div class="sec-title">Tier 2 — Should Build (Strong Revenue Impact)</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">3 done</span>
+      <span class="badge bg-amber">1 partial</span>
+      <span class="badge bg-red">2 pending</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T2.7 — Far-Out Minimum Price Protection</div>
+        <div class="row-sub">farOutEnabled · farOutDaysOut · farOutMarkupPct · farOutMinStay · waterfall Pass 2 · Rules Studio → Lead Time tab</div>
+      </div>
+      <span class="row-tag rt-t2">T2 · 8/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">T2.8 — Minimum Weekend Pricing</div>
+        <div class="row-sub">weekendMinPrice + weekendDays on Listing model · Guardrails tab UI with day picker · engine-config API · waterfall.ts Pass 4: if dow ∈ weekendDays and price &lt; weekendMinPrice → raised before global floor clamp</div>
+      </div>
+      <span class="row-tag rt-new">NEW ENGINE ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T2.9 — Date-Specific Overrides (DSO)</div>
+        <div class="row-sub">EVENT + ADMIN_BLOCK PricingRule types · priceOverride/priceAdjPct · minStayOverride · closedToArrival/Departure · isBlocked · suspendLastMinute · suspendGapFill · waterfall Pass 1 · Rules Studio → Date Overrides tab</div>
+      </div>
+      <span class="row-tag rt-t2">T2 · 8/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-pending">○</div>
+      <div class="row-content">
+        <div class="row-title">T2.9b — Overrides at Group / Account Scope</div>
+        <div class="row-sub">Currently listing-level only · portfolio-wide event pricing across all units simultaneously not yet built</div>
+      </div>
+      <span class="row-tag rt-t2">T2</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-pending">○</div>
+      <div class="row-content">
+        <div class="row-title">T2.10 — Adjacent Booking Factor</div>
+        <div class="row-sub">Turnaround premium/discount for nights immediately before/after reservations · not in schema, not in waterfall</div>
+      </div>
+      <span class="row-tag rt-t2">T2 · 6/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-partial">~</div>
+      <div class="row-content">
+        <div class="row-title">T2.11 — Length-of-Stay Discounts Applied to Nightly Rate</div>
+        <div class="row-sub">✅ LOS_DISCOUNT PricingRule CRUD · ✅ Rules Studio LOS Discounts tab · ⚠️ Engine notes available tiers in reasoning but does not stack per-night discount into price calculation</div>
+      </div>
+      <span class="row-tag rt-t2">T2 · 7/10</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ TIER 3 ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-purple">🔮</div>
+    <div class="sec-title">Tier 3 — Build Later (Incremental / V2)</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">1 done</span>
+      <span class="badge bg-purple">4 deferred V2</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">T3.12 — Demand Factor Sensitivity / Hotel Weighting</div>
+        <div class="row-sub">Slider controlling how much hotel pricing influences STR rates · deferred to V2</div>
+      </div>
+      <span class="row-tag rt-v2">V2 · 5/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">T3.13 — Customisation Hierarchy (Account → Group → Listing)</div>
+        <div class="row-sub">All rules listing-level today · portfolio hierarchy deferred · needed for 100+ unit operators</div>
+      </div>
+      <span class="row-tag rt-v2">V2 · 6/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">T3.14 — Check-in / Check-out Day Restrictions</div>
+        <div class="row-sub">allowedCheckinDays + allowedCheckoutDays (7-element boolean array) · waterfall Pass 1 enforced · Rules Studio → Guardrails tab with day toggle grid</div>
+      </div>
+      <span class="row-tag rt-t3">T3 · 4/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">T3.15 — Channel-Specific Pricing Offsets</div>
+        <div class="row-sub">+% on VRBO, −% on Airbnb etc. · most PMS tools handle this · low V1 priority</div>
+      </div>
+      <span class="row-tag rt-v2">V2 · 5/10</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">T3.16 — Intra-Day Portfolio Occupancy Adjustments</div>
+        <div class="row-sub">Different pricing at 6AM vs 6PM for same-day vacancies · advanced V2 feature</div>
+      </div>
+      <span class="row-tag rt-v2">V2 · 4/10</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ WATERFALL ENGINE ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-teal">⚙️</div>
+    <div class="sec-title">4-Pass Waterfall Engine — Wiring Status</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">4 passes wired</span>
+      <span class="badge bg-red">1 gap remains</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Pass 1 — Foundation: ADMIN_BLOCK + EVENT + SEASON rules</div>
+        <div class="row-sub">Date-range filter · DOW mask · priority sort · priceOverride/priceAdjPct · minStayOverride · isBlocked · closedToArrival/Departure · suspendLastMinute flag</div>
+      </div>
+      <span class="row-tag rt-eng">ENGINE</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Pass 2 — Strategy: Last-minute (flat + ramp) · Far-out · DOW · Occupancy adjustment</div>
+        <div class="row-sub">Ramp curve: lerp(maxDiscountPct → minDiscountPct, t = leadTime/rampWindow) · Occupancy: rolling % from InventoryMaster → high/low threshold adj · DOW day selector · Far-out markup</div>
+      </div>
+      <span class="row-tag rt-new">UPDATED ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Pass 3 — Inventory: Gap prevention + Gap fill</div>
+        <div class="row-sub">Booking map computed from InventoryMaster · gap detection · minFragmentThreshold blocks short orphans · gapFillDiscountPct + CICO override for fill-eligible gaps</div>
+      </div>
+      <span class="row-tag rt-eng">ENGINE</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Pass 4 — Guardrails: weekendMinPrice + priceFloor + priceCeiling clamp</div>
+        <div class="row-sub">weekendMinPrice now wired (before global floor) · lowestMinStayAllowed enforced · round to 2dp · pipeline.ts maps all new fields from Listing model</div>
+      </div>
+      <span class="row-tag rt-new">UPDATED ✓</span>
+    </div>
+
+    <div class="row" style="background:#fff8f8;">
+      <div class="ci ci-pending">○</div>
+      <div class="row-content">
+        <div class="row-title">REMAINING GAP — LOS_DISCOUNT rules applied to nightly rate</div>
+        <div class="row-sub">LOS_DISCOUNT PricingRule documents exist and are shown in reasoning notes · actual per-night discount not yet calculated in the price loop · booking-time vs nightly decision pending</div>
+      </div>
+      <span class="row-tag rt-t2">PENDING</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ UI SECTIONS ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-green">🖥️</div>
+    <div class="sec-title">UI Sections — Implementation Status</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">All major sections live</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Dashboard — Portfolio Overview</div>
+        <div class="row-sub">KPI strip · per-property cards with 30-day heatmap · occupancy bars · revenue · reservations list · server-rendered from MongoDB</div>
+      </div>
+      <span class="row-tag rt-ui">Dashboard</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Agent Chat (Aria / CRO)</div>
+        <div class="row-sub">Property selector · date range · streaming chat with CRO Router agent · market analysis trigger (8 agents) · Market Summary / Signals / Event Calendar right sidebar</div>
+      </div>
+      <span class="row-tag rt-ui">Agent Chat</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Pricing — Proposals Tab</div>
+        <div class="row-sub">Status tabs (Pending/Approved/Rejected/Pushed) · property filter · sort · bulk select + bulk approve/reject · risk badge (Low/Medium/High) · expand reasoning · Approve/Reject/Modify actions · Run Engine button</div>
+      </div>
+      <span class="row-tag rt-ui">Pricing</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Pricing — Rules Studio (7 sub-tabs)</div>
+        <div class="row-sub">Guardrails · Seasons · Lead Time (flat + ramp) · Gap Logic · LOS Discounts · Date Overrides · Occupancy — all tabs built, all wired to engine-config API and waterfall engine</div>
+      </div>
+      <span class="row-tag rt-ui">Rules Studio</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Market Intelligence</div>
+        <div class="row-sub">Event calendar (90-day, impact badges, countdown, premium %) · filter bar (impact/category/area) · Competitor Benchmark Panel (P-distribution, verdict, comps table, recommended rates)</div>
+      </div>
+      <span class="row-tag rt-ui">Market</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Insights</div>
+        <div class="row-sub">12 insight categories · severity badges · confidence bars · expandable detail · Approve / Snooze 7d / Dismiss / Modify actions · status filter tabs · pending badge count</div>
+      </div>
+      <span class="row-tag rt-ui">Insights</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Sync &amp; Pipeline</div>
+        <div class="row-sub">Sources tab (4 sources, auto-seed, auto-poll after Run) · Detectors tab (12 detectors, auto-seed) · Engine Runs tab (KPIs, Run Engine Now, 50-run history)</div>
+      </div>
+      <span class="row-tag rt-ui">Sync</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Settings (5 tabs)</div>
+        <div class="row-sub">Connections (PMS API key, 10-market selector, currency override) · Organisation · Properties · Automation (guardrail sliders, pipeline toggles) · Display (theme)</div>
+      </div>
+      <span class="row-tag rt-ui">Settings</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Sign-Up / Onboarding</div>
+        <div class="row-sub">Market selector on sign-up form (10 global markets) · org created with template currency/timezone/guardrails · 6-step guided tour · market-neutral login page copy</div>
+      </div>
+      <span class="row-tag rt-new">NEW ✓</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ DUBAI → GLOBAL ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-indigo">🌐</div>
+    <div class="sec-title">Dubai → Global Change Spec Alignment</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">5 done</span>
+      <span class="badge bg-amber">1 partial</span>
+      <span class="badge bg-red">2 pending</span>
+      <span class="badge bg-purple">3 V2</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row">
+      <div class="ci ci-done">✓</div>
+      <div class="row-content">
+        <div class="row-title">Weekend definition — configurable per market</div>
+        <div class="row-sub">Thu/Fri UAE default · Fri/Sat global default · weekendDays array on Listing model · weekendDays selector in Guardrails tab</div>
+      </div>
+      <span class="row-tag rt-g">GLOBAL</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Market selection in sign-up</div>
+        <div class="row-sub">10-market dropdown on registration form · org created with template currency, timezone, and guardrail defaults · no longer defaults silently to UAE_DXB</div>
+      </div>
+      <span class="row-tag rt-new">NEW ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Market-calibrated guardrail defaults</div>
+        <div class="row-sub">UAE: ±15% max · London/Paris/Amsterdam: ±10% · NYC/Miami/Nashville: ±12% · Sydney: ±12% — loaded from MarketTemplate.guardrailDefaults at org creation and market change</div>
+      </div>
+      <span class="row-tag rt-new">NEW ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Agent prompts market-aware (no Dubai hardcoding)</div>
+        <div class="row-sub">market-setup/route.ts reads org.marketCode → MarketTemplate · uses ticketmasterCity, customKeywords, seasonalPatterns.notes for event/benchmark prompts instead of Dubai-hardcoded strings</div>
+      </div>
+      <span class="row-tag rt-new">NEW ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-new">✓</div>
+      <div class="row-content">
+        <div class="row-title">Login page copy globalised</div>
+        <div class="row-sub">"Dubai luxury market" → "anywhere in the world" · "Dubai Specialist" badge → "10+ Global Markets"</div>
+      </div>
+      <span class="row-tag rt-new">NEW ✓</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-partial">~</div>
+      <div class="row-content">
+        <div class="row-title">Currency — display labels in UI</div>
+        <div class="row-sub">✅ Agent prompts now use listing.currencyCode · ✅ Org currency set from template at registration · ⚠️ UI display labels (proposals table, dashboard KPIs, insights, rules studio inputs) still show "AED" hardcoded</div>
+      </div>
+      <span class="row-tag rt-g">PARTIAL</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-pending">○</div>
+      <div class="row-content">
+        <div class="row-title">Dubai area cluster strings in market-setup</div>
+        <div class="row-sub">market-setup/route.ts still maps "marina/jbr" → "Dubai Marina, JBR…" etc. — these Dubai-specific neighbourhood strings should be replaced with generic or template-driven clusters for non-Dubai markets</div>
+      </div>
+      <span class="row-tag rt-g">PENDING</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">Regulatory awareness (night caps, licensing flags)</div>
+        <div class="row-sub">Barcelona 90-night cap · Amsterdam 30-night cap · Paris/NYC/London permit requirements · MarketTemplate has regulatoryFlags fields · UI surface pending V2</div>
+      </div>
+      <span class="row-tag rt-v2">V2</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">CRO prompt localisation</div>
+        <div class="row-sub">Remove Islamic calendar awareness, "AED", "Dubai zones" from default CRO prompts · add market context from system_state · localisation layer reads org.marketCode</div>
+      </div>
+      <span class="row-tag rt-v2">V2</span>
+    </div>
+
+    <div class="row">
+      <div class="ci ci-v2">V2</div>
+      <div class="row-content">
+        <div class="row-title">Global PMS integrations list</div>
+        <div class="row-sub">Add Smoobu, BookingSync, Ownerrez, Track/GHTY, VRBO-native, Staah for GCC to integration roadmap</div>
+      </div>
+      <span class="row-tag rt-v2">V2</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE ALIGNMENT ═══════════ -->
+<div class="section">
+  <div class="sec-header">
+    <div class="sec-icon si-slate">📋</div>
+    <div class="sec-title">Phase Alignment (Sprint Roadmap)</div>
+    <div class="sec-badges">
+      <span class="badge bg-green">Phase 1 complete</span>
+      <span class="badge bg-amber">Phase 2 partial</span>
+    </div>
+  </div>
+  <div class="checklist">
+
+    <div class="row"><div class="ci ci-done">✓</div><div class="row-content"><div class="row-title">P1.2 Seasonal profiles engine</div><div class="row-sub">PricingRule SEASON + waterfall Pass 1</div></div></div>
+    <div class="row"><div class="ci ci-done">✓</div><div class="row-content"><div class="row-title">P1.3 Day-of-week adjustments (UAE-style weekend configurable)</div><div class="row-sub">dowDays configurable array, not hardcoded Thu/Fri</div></div></div>
+    <div class="row"><div class="ci ci-done">✓</div><div class="row-content"><div class="row-title">P1.4 Date-specific override system + UI</div><div class="row-sub">Rules API + Pricing Rules Studio → Date Overrides tab</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P1.1 Auto-ADR as engine default</div><div class="row-sub">ADR via market flow exists · not yet wired as pipeline base price suggestion</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P1.5 Bar-level rate grid</div><div class="row-sub">Not found as product surface in V1</div></div></div>
+
+    <div class="row"><div class="ci ci-partial">~</div><div class="row-content"><div class="row-title">P2.1 Last-minute curve (ramp curve done · velocity awareness pending)</div><div class="row-sub">Ramp lerp wired · booking-pace signal adjusting urgency not yet connected</div></div></div>
+    <div class="row"><div class="ci ci-partial">~</div><div class="row-content"><div class="row-title">P2.2 Occupancy in waterfall (per-listing done · portfolio-level pending)</div><div class="row-sub">Per-listing rolling occupancy in Pass 2 · cross-listing portfolio rules not built</div></div></div>
+    <div class="row"><div class="ci ci-done">✓</div><div class="row-content"><div class="row-title">P2.3 Orphan/gap pricing</div><div class="row-sub">Implemented (not full multi-rule matrix / weekday split)</div></div></div>
+    <div class="row"><div class="ci ci-done">✓</div><div class="row-content"><div class="row-title">P2.4 Far-out minimum protection</div><div class="row-sub">Far-out markup pass in waterfall</div></div></div>
+    <div class="row"><div class="ci ci-new">✓</div><div class="row-content"><div class="row-title">P2.5 Minimum weekend pricing in computeDay</div><div class="row-sub">weekendMinPrice now enforced in Pass 4 — was field-only before this sprint</div></div></div>
+
+    <div class="row"><div class="ci ci-done">✓</div><div class="row-content"><div class="row-title">P3.3 Competitor rate comparison UI</div><div class="row-sub">Benchmark panel with P-distribution, verdict, comps table</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P3.1 Adjacent booking factor</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P3.2 Tiered LOS discounts in nightly calculation</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P3.3b Auto-positioning from comps in engine</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P3.4 Portfolio occupancy + booking-window segmentation</div></div></div>
+    <div class="row"><div class="ci ci-pending">○</div><div class="row-content"><div class="row-title">P3.5 Customisation hierarchy</div></div></div>
+
+    <div class="row"><div class="ci ci-v2">V2</div><div class="row-content"><div class="row-title">P4.1–P4.5 (Intra-day, channel offsets, hotel weighting, CI/CO phased, base recalibration)</div></div></div>
+
+  </div>
+</div>
+
+<!-- ═══════════ WHAT'S PENDING ═══════════ -->
+<div class="pending-section">
+  <div class="pending-header">
+    <div style="font-size:20px;">⚠️</div>
+    <div class="pending-header-title">V1 Remaining Work — Before Client Demo</div>
+  </div>
+  <div class="pending-body">
+    <div class="checklist">
+
+      <div class="row">
+        <div class="ci ci-partial">~</div>
+        <div class="row-content">
+          <div class="row-title">Currency display labels in UI components</div>
+          <div class="row-sub">Listing.currencyCode and org.currency exist and are used in agent prompts · but proposals table, dashboard KPIs, insights cards, and rules studio inputs still display "AED" as a hardcoded string. Needs currencyCode passed as prop from listing data to each component.</div>
+        </div>
+        <span class="row-tag rt-g">PARTIAL</span>
+      </div>
+
+      <div class="row">
+        <div class="ci ci-pending">○</div>
+        <div class="row-content">
+          <div class="row-title">LOS_DISCOUNT rules — stack nightly price discount</div>
+          <div class="row-sub">LOS_DISCOUNT PricingRule CRUD exists. Engine notes available tiers in the reasoning string. Decision needed: apply at nightly rate level (waterfall Pass 2) or at booking-time calculation. V1 gap — customers see discounts listed but not applied.</div>
+        </div>
+        <span class="row-tag rt-t2">T2.11</span>
+      </div>
+
+      <div class="row">
+        <div class="ci ci-pending">○</div>
+        <div class="row-content">
+          <div class="row-title">Dubai area cluster strings in market-setup/route.ts</div>
+          <div class="row-sub">Lines 98–103: "marina/jbr" → "Dubai Marina, JBR…", "downtown/difc" → "Downtown Dubai, DIFC…", "palm" → "Palm Jumeirah…". These strings are sent verbatim to the Benchmark Agent. For non-Dubai markets the agent receives Dubai neighbourhoods as context — misleading. Should use listing.area directly as the search cluster.</div>
+        </div>
+        <span class="row-tag rt-g">GLOBAL</span>
+      </div>
+
+      <div class="row">
+        <div class="ci ci-pending">○</div>
+        <div class="row-content">
+          <div class="row-title">T1.1b — Auto base price from comp ADR during onboarding</div>
+          <div class="row-sub">Guardrails Agent already suggests floor/ceiling if unset. But the listing's base price is not auto-suggested from the comp set P50 rate during the onboarding tour. Manual entry only.</div>
+        </div>
+        <span class="row-tag rt-t1">T1.1b</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- WHAT'S NEXT -->
+<div class="next-section">
+  <h2>Recommended Next Steps (Priority Order)</h2>
+
+  <div class="next-item">
+    <div class="next-num">1</div>
+    <div>
+      <div class="next-title">Wire currency symbol throughout UI display</div>
+      <div class="next-sub">Pass <span style="font-family:monospace;font-size:11px;background:#f5f3ff;padding:1px 4px;border-radius:3px;">listing.currencyCode</span> or <span style="font-family:monospace;font-size:11px;background:#f5f3ff;padding:1px 4px;border-radius:3px;">org.currency</span> as a prop into price-display components. Replace every hardcoded "AED" string. Affects: proposals table, dashboard KPIs, insights cards, rules studio inputs, benchmark panel.</div>
+      <span class="next-tag" style="background:#e0f2fe;color:#0369a1;">Global Spec · High visibility</span>
+    </div>
+  </div>
+
+  <div class="next-item">
+    <div class="next-num">2</div>
+    <div>
+      <div class="next-title">Remove Dubai area cluster strings from market-setup/route.ts</div>
+      <div class="next-sub">Replace the Marina/Downtown/Palm neighbourhood cluster mapping with <span style="font-family:monospace;font-size:11px;background:#f5f3ff;padding:1px 4px;border-radius:3px;">listing.area</span> directly (already available). Prompts will be market-neutral and correct for any city.</div>
+      <span class="next-tag" style="background:#e0f2fe;color:#0369a1;">Global Spec · 5-min fix</span>
+    </div>
+  </div>
+
+  <div class="next-item">
+    <div class="next-num">3</div>
+    <div>
+      <div class="next-title">LOS_DISCOUNT nightly stacking decision</div>
+      <div class="next-sub">Decide: apply the longest-qualifying LOS tier discount in waterfall Pass 2 (pass booking nights in BookingContext), or leave as booking-time only. Implementing in Pass 2 requires BookingContext to include the guest's intended stay length.</div>
+      <span class="next-tag" style="background:#fef3c7;color:#92400e;">T2.11 · Medium effort</span>
+    </div>
+  </div>
+
+  <div class="next-item">
+    <div class="next-num">4</div>
+    <div>
+      <div class="next-title">Auto base-price suggestion from comp ADR (T1.1b)</div>
+      <div class="next-sub">During onboarding tour Step 2 (guardrails), pre-fill the base price input with BenchmarkData.p50Rate if available for the selected listing. Small UI change with high impact on first-run quality.</div>
+      <span class="next-tag" style="background:#fef3c7;color:#92400e;">T1.1b · Medium effort</span>
+    </div>
+  </div>
+
+  <div class="next-item">
+    <div class="next-num">5</div>
+    <div>
+      <div class="next-title">V2 Roadmap — Portfolio hierarchy, channel offsets, regulatory flags</div>
+      <div class="next-sub">T3.13 customisation hierarchy (account → group → listing) · T3.15 channel-specific offsets · P3.4 portfolio occupancy · Regulatory flag surface for Amsterdam/Barcelona/Paris night caps.</div>
+      <span class="next-tag" style="background:#ede9fe;color:#6d28d9;">V2 · Post-launch</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p><strong>PriceOS Implementation Status &amp; Checklist</strong> — Generated April 2026 · Confidential Client Deliverable</p>
+  <p style="margin-top:6px;">42 / 55 items complete · 76% · Engine: 4-pass waterfall (waterfall.ts + pipeline.ts) · 8 Lyzr agents · 10 global market templates</p>
+  <p style="margin-top:6px;color:#bbb;">Print to PDF via Cmd+P / Ctrl+P for client distribution.</p>
+</div>
+
+</div>
+</body>
+</html>

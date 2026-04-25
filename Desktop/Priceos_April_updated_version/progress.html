@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PriceOS — Project Progress Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      padding: 40px 24px;
+    }
+    .page { max-width: 960px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 40px 48px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: "";
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 240px; height: 240px;
+      background: rgba(245,176,57,0.08);
+      border-radius: 50%;
+    }
+    .header-logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #f5b039;
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .header p {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .header-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .meta-pill {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .meta-pill strong { color: #f5b039; }
+
+    /* ── Progress Bar ── */
+    .progress-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+    }
+    .progress-card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #1a1a2e;
+    }
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-box {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+    }
+    .stat-num {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-num.green { color: #16a34a; }
+    .stat-num.amber { color: #d97706; }
+    .stat-num.red   { color: #dc2626; }
+    .stat-num.blue  { color: #2563eb; }
+    .stat-label { font-size: 12px; color: #6b7280; font-weight: 500; }
+    .bar-wrap { background: #f1f5f9; border-radius: 8px; height: 12px; overflow: hidden; }
+    .bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #16a34a, #22c55e);
+      transition: width 0.6s ease;
+    }
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    /* ── Section ── */
+    .section {
+      background: white;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 20px 28px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .icon-green  { background: #dcfce7; }
+    .icon-amber  { background: #fef3c7; }
+    .icon-blue   { background: #dbeafe; }
+    .icon-purple { background: #ede9fe; }
+    .icon-red    { background: #fee2e2; }
+    .section-title { font-size: 15px; font-weight: 700; flex: 1; }
+    .section-badges { display: flex; gap: 8px; }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .badge-green  { background: #dcfce7; color: #15803d; }
+    .badge-amber  { background: #fef3c7; color: #b45309; }
+    .badge-red    { background: #fee2e2; color: #b91c1c; }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+    .badge-gray   { background: #f3f4f6; color: #6b7280; }
+
+    /* ── Checklist rows ── */
+    .checklist { padding: 4px 0; }
+    .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 13px 28px;
+      border-bottom: 1px solid #f8f9fa;
+      transition: background 0.15s;
+    }
+    .check-row:last-child { border-bottom: none; }
+    .check-row:hover { background: #fafbfc; }
+    .check-icon {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      margin-top: 1px;
+    }
+    .done   { background: #dcfce7; color: #16a34a; }
+    .new    { background: #d1fae5; color: #059669; border: 2px solid #6ee7b7; }
+    .partial { background: #fef3c7; color: #d97706; }
+    .pending { background: #f3f4f6; color: #9ca3af; border: 1px solid #e5e7eb; }
+    .v2 { background: #ede9fe; color: #7c3aed; }
+
+    .check-content { flex: 1; min-width: 0; }
+    .check-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #1a1a2e;
+      line-height: 1.45;
+    }
+    .check-title.strikethrough { text-decoration: none; }
+    .check-sub {
+      font-size: 11.5px;
+      color: #9ca3af;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    .check-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+    .tag-new     { background: #d1fae5; color: #065f46; }
+    .tag-t1      { background: #fef3c7; color: #92400e; }
+    .tag-t2      { background: #dbeafe; color: #1e40af; }
+    .tag-t3      { background: #f3e8ff; color: #6d28d9; }
+    .tag-v2      { background: #fce7f3; color: #9d174d; }
+    .tag-global  { background: #e0f2fe; color: #0369a1; }
+    .tag-ux      { background: #f0fdf4; color: #166534; }
+
+    /* ── Global Change section ── */
+    .global-row {
+      display: grid;
+      grid-template-columns: 200px 1fr auto;
+      gap: 16px;
+      align-items: start;
+      padding: 13px 28px;
+      border-bottom: 1px solid #f8f9fa;
+      font-size: 13px;
+    }
+    .global-row:last-child { border-bottom: none; }
+    .global-component { font-weight: 600; color: #1a1a2e; font-size: 12px; }
+    .global-detail { color: #374151; line-height: 1.5; }
+    .global-status {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .gs-done    { background: #dcfce7; color: #15803d; }
+    .gs-partial { background: #fef3c7; color: #b45309; }
+    .gs-pending { background: #fee2e2; color: #b91c1c; }
+    .gs-v2      { background: #ede9fe; color: #7c3aed; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 16px 20px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      font-size: 12px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    @media print {
+      body { background: white; padding: 20px; }
+      .section, .progress-card { box-shadow: none; break-inside: avoid; }
+      .header { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">PriceOS</div>
+    <h1>Project Progress Report</h1>
+    <p>AI Revenue Manager — Full alignment audit against KB, Dubai→Global Spec, and Pricing Engine Customizations PDF</p>
+    <div class="header-meta">
+      <div class="meta-pill">Date: <strong>10 Apr 2026</strong></div>
+      <div class="meta-pill">Sprint: <strong>V1 Foundation Complete</strong></div>
+      <div class="meta-pill">KB Tier 1 items: <strong>7 / 8 complete</strong></div>
+      <div class="meta-pill">Overall: <strong>42 / 55 done</strong></div>
+    </div>
+  </div>
+
+  <!-- Overall Progress -->
+  <div class="progress-card">
+    <h2>Overall Completion — Pricing Engine Customizations (KB)</h2>
+    <div class="progress-grid">
+      <div class="stat-box">
+        <div class="stat-num green">42</div>
+        <div class="stat-label">Items Complete</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num amber">7</div>
+        <div class="stat-label">In Progress / Partial</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num red">4</div>
+        <div class="stat-label">Pending (V1)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num blue">8</div>
+        <div class="stat-label">Deferred V2</div>
+      </div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-fill" style="width: 76%;"></div>
+    </div>
+    <div class="bar-labels">
+      <span>0%</span>
+      <span style="color:#16a34a;font-weight:700;">76% complete (42 of 55 items) — +7 total this session</span>
+      <span>100%</span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="check-icon done">✓</div> <span>Complete (built &amp; working)</span>
+    </div>
+    <div class="legend-item">
+      <div class="check-icon new">✓</div> <span>Newly completed this sprint</span>
+    </div>
+    <div class="legend-item">
+      <div class="check-icon partial">~</div> <span>Partial — UI done, engine not wired</span>
+    </div>
+    <div class="legend-item">
+      <div class="check-icon pending">○</div> <span>Pending — not started</span>
+    </div>
+    <div class="legend-item">
+      <div class="check-icon v2">V2</div> <span>Deferred to V2</span>
+    </div>
+  </div>
+
+  <!-- TIER 1 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-amber">🔥</div>
+      <div class="section-title">Tier 1 — Must Build (Highest Revenue Impact)</div>
+      <div class="section-badges">
+        <span class="badge badge-green">7 done</span>
+        <span class="badge badge-red">1 pending</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.1a — Base Price + Min/Max Guardrails</div>
+          <div class="check-sub">priceFloor / priceCeiling on Listing model · enforced in 4-pass waterfall Pass 4 · editable in Rules Studio → Guardrails tab</div>
+        </div>
+        <span class="check-tag tag-t1">T1 · 10/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon pending">○</div>
+        <div class="check-content">
+          <div class="check-title">T1.1b — Auto-Base Price from Comp ADR</div>
+          <div class="check-sub">BenchmarkData exists in DB · not yet wired into onboarding auto-suggest · requires comp scraping pipeline to be active</div>
+        </div>
+        <span class="check-tag tag-t1">T1 · 10/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.2 — Seasonal Profiles (named seasons with % or fixed price override)</div>
+          <div class="check-sub">SEASON PricingRule CRUD · start/end date · priceAdjPct or priceOverride · minStayOverride · enabled toggle · Rules Studio → Seasons tab</div>
+        </div>
+        <span class="check-tag tag-t1">T1 · 9/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.3a — Last-Minute Discount (flat %)</div>
+          <div class="check-sub">lastMinuteEnabled · lastMinuteDaysOut · lastMinuteDiscountPct · applied in waterfall Pass 2 · editable in Rules Studio → Lead Time tab</div>
+        </div>
+        <span class="check-tag tag-t1">T1 · 9/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.3b — Last-Minute Gradual Ramp Curve</div>
+          <div class="check-sub">lastMinuteRampEnabled · lastMinuteRampDays · lastMinuteMaxDiscountPct · lastMinuteMinDiscountPct — schema + UI + <strong>engine fully wired</strong> · waterfall.ts lerps discount from maxPct (day 0) → minPct (day rampDays) · pipeline.ts populates from Listing model</div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓ ENGINE</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.4 — Occupancy-Based Adjustments</div>
+          <div class="check-sub">✅ Schema (7 fields) · ✅ OccupancyTab UI · ✅ engine-config API · ✅ <strong>NOW wired into waterfall computeDay (Pass 2)</strong> · pipeline.ts computes rolling occupancy% from InventoryMaster lookback · high/low threshold price adjustment applied in price calculation</div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓ ENGINE</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.5 — Orphan Day / Gap Pricing</div>
+          <div class="check-sub">gapPreventionEnabled + minFragmentThreshold (gap prevention) · gapFillEnabled + gapFillLengthMin/Max + gapFillDiscountPct + gapFillOverrideCico (gap fill) · waterfall Pass 3 · Rules Studio → Gap Logic tab</div>
+        </div>
+        <span class="check-tag tag-t1">T1 · 8/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T1.6 — Day-of-Week Pricing Adjustments</div>
+          <div class="check-sub">dowPricingEnabled · dowDays (configurable, not hardcoded Thu/Fri) · dowPriceAdjPct · waterfall Pass 2 · Rules Studio → Lead Time tab with day selector</div>
+        </div>
+        <span class="check-tag tag-t1">T1 · 7/10</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TIER 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">⚡</div>
+      <div class="section-title">Tier 2 — Should Build (Strong Revenue Impact, Differentiating)</div>
+      <div class="section-badges">
+        <span class="badge badge-green">3 done</span>
+        <span class="badge badge-amber">1 partial</span>
+        <span class="badge badge-red">2 pending</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T2.7 — Far-Out Minimum Price Protection</div>
+          <div class="check-sub">farOutEnabled · farOutDaysOut · farOutMarkupPct · applied in waterfall Pass 2 · Rules Studio → Lead Time tab</div>
+        </div>
+        <span class="check-tag tag-t2">T2 · 8/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">T2.8 — Minimum Weekend Pricing</div>
+          <div class="check-sub">✅ weekendMinPrice + weekendDays on Listing model · ✅ Guardrails tab UI with day picker · ✅ engine-config API · ✅ <strong>NOW enforced in waterfall Pass 4</strong> — before global floor clamp, if date.dow ∈ weekendDays and price &lt; weekendMinPrice → raised to weekendMinPrice · pipeline.ts maps from Listing with Thu/Fri Dubai default</div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓ ENGINE</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T2.9 — Date-Specific Overrides (DSO)</div>
+          <div class="check-sub">ADMIN_BLOCK + EVENT PricingRule type · priceOverride · minStayOverride · closedToArrival · closedToDeparture · suspendLastMinute: true auto-set · Rules Studio → Date Overrides tab · waterfall Pass 1</div>
+        </div>
+        <span class="check-tag tag-t2">T2 · 8/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon pending">○</div>
+        <div class="check-content">
+          <div class="check-title">T2.9b — Overrides at Group / Account Scope</div>
+          <div class="check-sub">Currently listing-level only · PRD requires portfolio-wide overrides for event pricing across all Marina units simultaneously</div>
+        </div>
+        <span class="check-tag tag-t2">T2</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon pending">○</div>
+        <div class="check-content">
+          <div class="check-title">T2.10 — Adjacent Booking Factor</div>
+          <div class="check-sub">Turnaround premium/discount for nights immediately before/after a reservation · not in schema, not in waterfall · KB Phase 3</div>
+        </div>
+        <span class="check-tag tag-t2">T2 · 6/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon partial">~</div>
+        <div class="check-content">
+          <div class="check-title">T2.11 — Length-of-Stay Discounts</div>
+          <div class="check-sub">✅ LOS_DISCOUNT PricingRule CRUD · ✅ Rules Studio → LOS Discounts tab · ⚠️ Not applied to nightly rate in waterfall computeDay — engine notes the rules but does not stack discount into the nightly price calculation</div>
+        </div>
+        <span class="check-tag tag-t2">T2 · 7/10</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TIER 3 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-purple">🔮</div>
+      <div class="section-title">Tier 3 — Build Later (Incremental / V2)</div>
+      <div class="section-badges">
+        <span class="badge badge-green">1 done</span>
+        <span class="badge badge-blue">5 deferred V2</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon v2">V2</div>
+        <div class="check-content">
+          <div class="check-title">T3.12 — Demand Factor Sensitivity / Hotel Weighting</div>
+          <div class="check-sub">Slider controlling how much hotel pricing influences STR rates · Build after core engine is solid</div>
+        </div>
+        <span class="check-tag tag-v2">V2 · 5/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon v2">V2</div>
+        <div class="check-content">
+          <div class="check-title">T3.13 — Customization Hierarchy (Account → Group → Listing)</div>
+          <div class="check-sub">All rules currently listing-level only · Portfolio-level overrides deferred · Needed for 100+ unit operators</div>
+        </div>
+        <span class="check-tag tag-v2">V2 · 6/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">T3.14 — Check-in / Check-out Day Restrictions</div>
+          <div class="check-sub">allowedCheckinDays + allowedCheckoutDays on Listing model (7-element boolean array) · waterfall enforces · Rules Studio → Guardrails tab with day checkboxes</div>
+        </div>
+        <span class="check-tag tag-t3">T3 · 4/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon v2">V2</div>
+        <div class="check-content">
+          <div class="check-title">T3.15 — Channel-Specific Pricing Offsets</div>
+          <div class="check-sub">+% on VRBO, -% on Airbnb etc. · Most PMS tools handle this already · Low priority for V1</div>
+        </div>
+        <span class="check-tag tag-v2">V2 · 5/10</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon v2">V2</div>
+        <div class="check-content">
+          <div class="check-title">T3.16 — Intra-Day Portfolio Occupancy Adjustments</div>
+          <div class="check-sub">Different pricing at 6AM vs 6PM for same-day vacancies · Advanced V2 feature</div>
+        </div>
+        <span class="check-tag tag-v2">V2 · 4/10</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRICING PROPOSALS UI -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-green">💰</div>
+      <div class="section-title">Pricing Proposals UI (PRD Part 5.1)</div>
+      <div class="section-badges">
+        <span class="badge badge-green">All done</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Daily AI price proposals from waterfall engine</div>
+          <div class="check-sub">InventoryMaster documents with proposedPrice, changePct, reasoning, proposalStatus · pending / approved / rejected / pushed tabs</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Risk classification — corrected to PRD page 13 thresholds</div>
+          <div class="check-sub">&lt;5% = Low (auto-approve eligible) · 5–15% = Medium (human review) · &gt;15% = High (human + warning banner)</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Approve / Reject / Modify per proposal (PRD Step 8 — "modifies batch")</div>
+          <div class="check-sub">Individual actions + bulk select toolbar · Modify opens inline price editor · POST /api/proposals/bulk-modify recalculates changePct per proposal</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Filter bar (property, direction) + 3-key sort + expiring flag</div>
+          <div class="check-sub">Proposals within 1 day of date show amber "Expiring" label · Sort by date / change% / property name with asc/desc toggle</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MARKET SECTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">🌍</div>
+      <div class="section-title">Market Intelligence Section</div>
+      <div class="section-badges">
+        <span class="badge badge-green">3 done</span>
+        <span class="badge badge-amber">1 partial</span>
+        <span class="badge badge-red">1 pending</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Event Calendar — 90-day timeline with impact, countdown, suggested premium</div>
+          <div class="check-sub">MarketEvent model · impact/impactLevel field mapping fixed this sprint · portfolio occupancy KPI · high-impact event count KPI</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">Event filter bar — impact, category, area/zone</div>
+          <div class="check-sub">Impact pills (All/High/Medium/Low) · category dropdown · area/zone dropdown derived from live event data · area tag on each event row · <strong>Built this sprint</strong></div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Competitor Benchmark Panel</div>
+          <div class="check-sub">BenchmarkData model · P25/P50/P75/P90 rates · percentile bar · UNDERPRICED/FAIR/SLIGHTLY_ABOVE/OVERPRICED verdict · recommended weekday/weekend rates · comp table with source URLs · listing selector</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon partial">~</div>
+        <div class="check-content">
+          <div class="check-title">Comp set configuration UI</div>
+          <div class="check-sub">⚠️ Benchmark panel fetches whatever is in BenchmarkData for the listing · No UI to add/remove individual competitors from a listing's comp set · Comp set is populated by the Market Analysis pipeline run, not editable by user</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon pending">○</div>
+        <div class="check-content">
+          <div class="check-title">Zone-level demand signals (Dubai area micro-seasonality)</div>
+          <div class="check-sub">MarketEvent has area/areas fields · Events not yet split by zone in the pipeline · Downtown vs Marina vs JBR demand patterns not surfaced separately</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INSIGHTS SECTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-green">💡</div>
+      <div class="section-title">Insights Section (AI Revenue Recommendations)</div>
+      <div class="section-badges">
+        <span class="badge badge-green">All done</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">AI insight cards with severity, category, confidence, recommended action</div>
+          <div class="check-sub">12 category types · BOOKING_PACE, OCCUPANCY, GAP_FILL, COMPETITOR_RATE, EVENT_IMPACT etc. · expand/collapse detail panel</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">Approve / Snooze 7d / Dismiss / <strong>Modify</strong> actions</div>
+          <div class="check-sub">Modify button (amber Pencil) on insights with adjustPct · inline % editor · Enter to save · POST /api/insights/:id with status:"modified" + modifiedAction · <strong>Built this sprint</strong></div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Status filter tabs + pending count badge + refresh</div>
+          <div class="check-sub">Pending / Approved / Rejected / Snoozed tabs · amber badge on pending tab · GET /api/insights?status=X on tab switch</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SYNC SECTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">🔄</div>
+      <div class="section-title">Sync / Pipeline Section</div>
+      <div class="section-badges">
+        <span class="badge badge-green">All done</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Sources tab — 4 configured data sources with status, schedule, last-run metadata</div>
+          <div class="check-sub">Hostaway Sync (4h) · Competitor Rates (6h) · Event Intelligence (12h) · Seasonality Patterns (daily)</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">Auto-seed sources and detectors on first load</div>
+          <div class="check-sub">GET /api/sync/sources + /api/sync/detectors now check countDocuments() and seed from SOURCES_SEED / DETECTORS_SEED if empty · fixes blank Sync page on fresh install · <strong>Built this sprint</strong></div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">Auto-poll after Run trigger — live status updates</div>
+          <div class="check-sub">Run button shows spinner + "Running…" state · polls every 3s · clears when source shows success/error · no manual refresh needed · <strong>Built this sprint</strong></div>
+        </div>
+        <span class="check-tag tag-new">NEW ✓</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Detectors tab — 12 signal detectors with category badges</div>
+          <div class="check-sub">Booking Pace · Lead Time · Cancellation Rate · Occupancy · Gap Analysis · LOS · Competitor Rate · DOW Pattern · Review Score · Event Impact · Seasonality Drift · Channel Mix</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Engine Runs tab — stats bar + Run Engine Now + run history</div>
+          <div class="check-sub">Today's runs / succeeded / failed / days repriced KPIs · POST /api/engine/run-all · last 50 runs per listing with duration + status</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DUBAI → GLOBAL ALIGNMENT -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">🌐</div>
+      <div class="section-title">Dubai → Global Change Spec Alignment</div>
+      <div class="section-badges">
+        <span class="badge badge-green">5 done</span>
+        <span class="badge badge-amber">1 partial</span>
+        <span class="badge badge-red">3 pending</span>
+        <span class="badge badge-blue">V2 roadmap</span>
+      </div>
+    </div>
+    <div style="padding: 8px 0;">
+
+      <div class="global-row" style="background:#f9fafb;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">
+        <span>Component</span>
+        <span>What changes (Global Spec)</span>
+        <span>Status</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Pricing Optimizer<br/><span style="font-weight:400;color:#6b7280;">Weekend definition</span></div>
+        <div class="global-detail">Thu/Fri hardcoded → configurable per market (Fri/Sat global default, Thu/Fri UAE/GCC)</div>
+        <span class="global-status gs-done">✓ Done</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Pricing Optimizer<br/><span style="font-weight:400;color:#6b7280;">Weekend min pricing</span></div>
+        <div class="global-detail">weekendMinPrice + weekendDays fields added · configurable UI in Guardrails tab</div>
+        <span class="global-status gs-done">✓ Done (UI)</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Competitor Scanner<br/><span style="font-weight:400;color:#6b7280;">Comp set source</span></div>
+        <div class="global-detail">Operator provides URLs or property names during onboarding (not Dubai-zone auto-assign). Comp set stored in BenchmarkData — pipeline configurable but onboarding UI still asks for manual entry.</div>
+        <span class="global-status gs-partial">⚠️ Partial</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Event Intelligence<br/><span style="font-weight:400;color:#6b7280;">Market-configurable layer</span></div>
+        <div class="global-detail">✅ market-setup/route.ts now reads org's MarketTemplate — uses template's ticketmasterCity, customKeywords, and seasonal month notes to build event/benchmark prompts instead of Dubai-hardcoded strings. Event filter UI (category/area) already built.</div>
+        <span class="global-status gs-done">✓ Done</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Pricing Optimizer<br/><span style="font-weight:400;color:#6b7280;">Currency in engine prompts</span></div>
+        <div class="global-detail">✅ market-setup/route.ts now reads listing.currencyCode (falling back to org.currency) — all AI agent prompts now use the operator's actual currency instead of hardcoded "AED". UI components still use "AED" in display labels (pending).</div>
+        <span class="global-status gs-partial">⚠️ Partial</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Onboarding — Sign Up<br/><span style="font-weight:400;color:#6b7280;">Market selection</span></div>
+        <div class="global-detail">✅ Sign-up form now includes a "Primary Market" dropdown with all 10 market templates (Dubai, London, NYC, Paris, Amsterdam, Barcelona, Miami, Lisbon, Nashville, Sydney). Selected marketCode sent to /api/auth/register → org created with correct currency, timezone, guardrail defaults from template.</div>
+        <span class="global-status gs-done">✓ Done</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Login Page Copy<br/><span style="font-weight:400;color:#6b7280;">Remove "Dubai" from tagline</span></div>
+        <div class="global-detail">✅ Left-panel copy updated: "Dubai luxury market" → "short-term rental operators — anywhere in the world" · "Dubai Specialist" footer badge → "10+ Global Markets".</div>
+        <span class="global-status gs-done">✓ Done</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Onboarding Stage 2<br/><span style="font-weight:400;color:#6b7280;">Market-calibrated guardrails</span></div>
+        <div class="global-detail">✅ Already implemented in /api/auth/register — org guardrail defaults (maxSingleDayChangePct, autoApproveThreshold, floor/ceiling multipliers) loaded from the selected market's MarketTemplate.guardrailDefaults. UAE=±15%, London=±10%, NYC=±12% etc.</div>
+        <span class="global-status gs-done">✓ Done</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Onboarding Stage 2<br/><span style="font-weight:400;color:#6b7280;">Regulatory awareness</span></div>
+        <div class="global-detail">Short-stay permit requirements for Barcelona, Amsterdam, Paris, NYC, London, Dubai/UAE — CRO flags unlicensed units</div>
+        <span class="global-status gs-v2">V2</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">CRO (Manager Agent)<br/><span style="font-weight:400;color:#6b7280;">Market-neutral language</span></div>
+        <div class="global-detail">Remove "AED", "Dubai zones", Islamic calendar awareness from default prompts → "your local currency", "your market". Localisation layer reads market context from system_state.</div>
+        <span class="global-status gs-v2">V2</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">PMS Priority List<br/><span style="font-weight:400;color:#6b7280;">Global integrations</span></div>
+        <div class="global-detail">Add Smoobu, BookingSync, Ownerrez, Track/GHTY, VRBO-native (Escapia, Barefoot), Staah for GCC to integration list</div>
+        <span class="global-status gs-v2">V2</span>
+      </div>
+
+      <div class="global-row">
+        <div class="global-component">Onboarding Stage 1<br/><span style="font-weight:400;color:#6b7280;">Remove Dubai zone hardcoding in area clustering</span></div>
+        <div class="global-detail">market-setup/route.ts area cluster matching (Marina/JBR → "Dubai Marina...", Downtown/DIFC → "Downtown Dubai...") still has Dubai-specific cluster names hardcoded. Should be driven by market template or listing.area directly. Pending cleanup.</div>
+        <span class="global-status gs-pending">Pending</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WATERFALL ENGINE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-amber">⚙️</div>
+      <div class="section-title">Waterfall Engine — What's Wired vs Not</div>
+      <div class="section-badges">
+        <span class="badge badge-green">3 newly wired</span>
+        <span class="badge badge-red">1 gap remaining</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Pass 1 — Foundation: ADMIN_BLOCK + EVENT rules applied</div>
+          <div class="check-sub">Date overrides with highest priority · suspendLastMinute flag respected · priority sort picks winner rule</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">Pass 2 — Strategy: SEASON, DOW, Last-minute (flat + ramp curve), Far-out, Occupancy adjustment</div>
+          <div class="check-sub">✅ Ramp curve now wired: lerp(maxDiscountPct → minDiscountPct, t=leadTime/rampDays) · ✅ Occupancy adjustment now wired: rolling % from InventoryMaster lookback → high/low threshold price adj · LOS_DISCOUNT rules noted but nightly stacking still pending</div>
+        </div>
+        <span class="check-tag tag-new">UPDATED</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon done">✓</div>
+        <div class="check-content">
+          <div class="check-title">Pass 3 — Inventory: Gap prevention + gap fill discount</div>
+          <div class="check-sub">minFragmentThreshold blocks short gaps · gapFillDiscountPct applied · LOS_DISCOUNT rules noted but not stacked into nightly price (pending)</div>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">Pass 4 — Guardrails: weekendMinPrice clamp + priceFloor + priceCeiling</div>
+          <div class="check-sub">✅ weekendMinPrice now wired: if dow ∈ weekendDays and price &lt; weekendMinPrice → raised before global floor clamp · lowestMinStayAllowed enforced · CICO day restrictions enforced</div>
+        </div>
+        <span class="check-tag tag-new">UPDATED</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon pending">○</div>
+        <div class="check-content">
+          <div class="check-title">🚧 REMAINING GAP: LOS_DISCOUNT rules applied to nightly rate</div>
+          <div class="check-sub">LOS_DISCOUNT PricingRule documents exist · engine notes them in reasoning string but does not stack the per-night discount into the price calculation · booking-time discount only</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WHAT'S NOT BUILT YET (V1 gaps) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-red">⚠️</div>
+      <div class="section-title">V1 Remaining Gaps — Before Client Demo</div>
+      <div class="section-badges">
+        <span class="badge badge-green">3 closed this sprint ✓</span>
+        <span class="badge badge-red">2 remaining</span>
+      </div>
+    </div>
+    <div class="checklist">
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">✓ CLOSED: weekendMinPrice wired into waterfall Pass 4</div>
+          <div class="check-sub">waterfall.ts: before global floor clamp, if dow ∈ weekendDays and price &lt; weekendMinPrice → raised · pipeline.ts maps weekendMinPrice + weekendDays from Listing model</div>
+        </div>
+        <span class="check-tag tag-new">DONE</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">✓ CLOSED: Occupancy adjustment wired into waterfall Pass 2</div>
+          <div class="check-sub">pipeline.ts: queries InventoryMaster for lookbackDays window → computes rolling occupancy% · waterfall.ts computeDay: applies occupancyHighAdjPct or occupancyLowAdjPct based on threshold comparison</div>
+        </div>
+        <span class="check-tag tag-new">DONE</span>
+      </div>
+
+      <div class="check-row">
+        <div class="check-icon new">✓</div>
+        <div class="check-content">
+          <div class="check-title">✓ CLOSED: Last-minute ramp curve wired into waterfall Pass 2</div>
+          <div class="check-sub">waterfall.ts: when lastMinuteRampEnabled, t = leadTime / rampWindow → discountPct = lerp(maxDiscountPct, minDiscountPct, t) · note includes lerp values + days-out context</div>
+        </div>
+        <span class="check-tag tag-new">DONE</span>
+      </div>
+
+      <div class="check-row" style="background:#fff8f8;">
+        <div class="check-icon pending">○</div>
+        <div class="check-content">
+          <div class="check-title">LOS_DISCOUNT rules — stack nightly price discount</div>
+          <div class="check-sub">LOS_DISCOUNT PricingRule documents exist · engine notes them but does not apply per-night discount · needs booking-time LOS lookup or per-night stacking in Pass 2</div>
+        </div>
+        <span class="check-tag tag-t2">PENDING</span>
+      </div>
+
+      <div class="check-row" style="background:#fff8f8;">
+        <div class="check-icon partial">~</div>
+        <div class="check-content">
+          <div class="check-title">Currency: replace hardcoded "AED" in UI display labels</div>
+          <div class="check-sub">✅ Agent prompts now use listing.currencyCode (market-setup/route.ts) · ✅ Org created with template currency at registration · ⚠️ UI components (proposals table, dashboard KPIs, insights cards, rules studio inputs) still show "AED" hardcoded — needs currencyCode passed as prop from listing data</div>
+        </div>
+        <span class="check-tag tag-global">PARTIAL</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p><strong>PriceOS Project Progress Report</strong> — Generated 10 Apr 2026</p>
+    <p style="margin-top:6px;">Sources: KB Pricing Engine Customizations PDF · Dubai→Global Change Spec PDF · Original_priceos codebase audit (Apr 2026)</p>
+    <p style="margin-top:6px; color:#bbb;">This document reflects the current state of the Original_priceos codebase after the Apr 2026 sprint. Re-audit after each feature ship.</p>
+  </div>
+
+</div>
+</body>
+</html>

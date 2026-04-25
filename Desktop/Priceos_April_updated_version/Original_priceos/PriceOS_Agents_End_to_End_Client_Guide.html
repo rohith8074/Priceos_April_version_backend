@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PriceOS End-to-End Agent Working Guide</title>
+  <style>
+    :root {
+      --bg: #f5f0e8;
+      --paper: rgba(255, 251, 245, 0.88);
+      --paper-strong: #fffaf3;
+      --ink: #17212b;
+      --muted: #556371;
+      --line: rgba(23, 33, 43, 0.14);
+      --gold: #c88b2a;
+      --gold-soft: rgba(200, 139, 42, 0.12);
+      --teal: #165f63;
+      --teal-soft: rgba(22, 95, 99, 0.12);
+      --rose: #8b4d3d;
+      --shadow: 0 24px 70px rgba(23, 33, 43, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --sans: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Times New Roman", serif;
+      --mono: "SFMono-Regular", "Menlo", "Consolas", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(200, 139, 42, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(22, 95, 99, 0.16), transparent 30%),
+        linear-gradient(180deg, #f8f4ec 0%, #efe7db 100%);
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(23, 33, 43, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(23, 33, 43, 0.025) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent 88%);
+    }
+
+    .page {
+      width: min(1220px, calc(100% - 40px));
+      margin: 40px auto 72px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 44px;
+      border: 1px solid rgba(23, 33, 43, 0.08);
+      border-radius: 34px;
+      background:
+        linear-gradient(140deg, rgba(255, 250, 243, 0.94), rgba(247, 239, 228, 0.9)),
+        var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200, 139, 42, 0.16), transparent 70%);
+    }
+
+    .eyebrow,
+    .section-kicker {
+      margin: 0 0 14px;
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: var(--serif);
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: clamp(2.7rem, 5vw, 4.8rem);
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 3vw, 2.7rem);
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .lede {
+      max-width: 900px;
+      margin-top: 18px;
+      font-size: 1.08rem;
+    }
+
+    .note {
+      margin-top: 24px;
+      padding: 16px 18px;
+      border: 1px solid rgba(23, 33, 43, 0.08);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--ink);
+    }
+
+    .hero-grid,
+    .card-grid,
+    .mini-grid,
+    .signal-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 28px;
+    }
+
+    .card-grid.cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card-grid.cols-3,
+    .signal-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .mini-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 14px;
+    }
+
+    .stat,
+    .card,
+    .timeline-step,
+    .lane,
+    .sequence,
+    .api-card {
+      position: relative;
+      padding: 22px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+    }
+
+    .stat {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 251, 245, 0.64));
+    }
+
+    .stat strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 2rem;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(23, 33, 43, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .chip.live {
+      background: rgba(22, 95, 99, 0.08);
+      color: var(--teal);
+    }
+
+    .chip.setup {
+      background: rgba(200, 139, 42, 0.12);
+      color: #9b6814;
+    }
+
+    .chip.spec {
+      background: rgba(139, 77, 61, 0.1);
+      color: var(--rose);
+    }
+
+    .section {
+      margin-top: 34px;
+      padding: 34px;
+      border: 1px solid rgba(23, 33, 43, 0.08);
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(255, 251, 245, 0.84), rgba(255, 255, 255, 0.62));
+      box-shadow: var(--shadow);
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .section-head p {
+      max-width: 780px;
+    }
+
+    .system-map {
+      display: grid;
+      grid-template-columns: 1.15fr 0.9fr 1.15fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .lane h3 {
+      margin-bottom: 8px;
+    }
+
+    .lane ul,
+    .timeline-step ul,
+    .card ul,
+    .sequence ul,
+    .api-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .lane li,
+    .timeline-step li,
+    .card li,
+    .sequence li,
+    .api-card li {
+      margin-bottom: 7px;
+    }
+
+    .lane-center {
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      border-radius: 28px;
+      border: 1px dashed rgba(23, 33, 43, 0.14);
+      background: linear-gradient(180deg, rgba(200, 139, 42, 0.06), rgba(22, 95, 99, 0.05));
+    }
+
+    .spine {
+      width: 100%;
+      padding: 22px;
+      border-radius: 22px;
+      background: var(--paper-strong);
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .spine h3 {
+      margin-bottom: 12px;
+    }
+
+    .spine-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .spine-list span {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(23, 33, 43, 0.06);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--ink);
+    }
+
+    .role-table-wrap,
+    .catalogue-wrap {
+      overflow-x: auto;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.64);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 940px;
+    }
+
+    th,
+    td {
+      vertical-align: top;
+      text-align: left;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(23, 33, 43, 0.08);
+    }
+
+    th {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      background: rgba(200, 139, 42, 0.06);
+    }
+
+    td strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+
+    .role-sub {
+      display: block;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 18px;
+    }
+
+    .timeline-step {
+      padding-left: 94px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(247, 240, 229, 0.62));
+    }
+
+    .step-no {
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      color: var(--ink);
+      background: linear-gradient(180deg, rgba(200, 139, 42, 0.18), rgba(22, 95, 99, 0.12));
+      border: 1px solid rgba(23, 33, 43, 0.1);
+    }
+
+    .label {
+      display: inline-block;
+      margin: 0 0 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: var(--teal-soft);
+      font-weight: 700;
+    }
+
+    .label.alt {
+      color: #9b6814;
+      background: var(--gold-soft);
+    }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .step-box {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(23, 33, 43, 0.08);
+    }
+
+    .step-box h4 {
+      margin: 0 0 8px;
+      font-size: 0.83rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+    }
+
+    .step-box p {
+      font-size: 0.94rem;
+    }
+
+    .callout {
+      padding: 20px 22px;
+      border-left: 4px solid var(--gold);
+      border-radius: 18px;
+      background: rgba(255, 248, 237, 0.76);
+      color: var(--ink);
+    }
+
+    .sequence-wrap {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+
+    .sequence strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .api-card h3 {
+      margin-bottom: 10px;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 24px 28px;
+      border: 1px solid rgba(23, 33, 43, 0.08);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: var(--shadow);
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      background: rgba(23, 33, 43, 0.06);
+      padding: 2px 6px;
+      border-radius: 8px;
+      color: var(--ink);
+    }
+
+    @media (max-width: 1100px) {
+      .hero-grid,
+      .card-grid.cols-4,
+      .card-grid.cols-3,
+      .signal-grid,
+      .api-grid,
+      .system-map,
+      .sequence-wrap,
+      .step-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100% - 20px, 100%);
+        margin: 18px auto 44px;
+      }
+
+      .hero,
+      .section,
+      .footer {
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .hero-grid,
+      .card-grid.cols-4,
+      .card-grid.cols-3,
+      .mini-grid,
+      .signal-grid,
+      .api-grid,
+      .system-map,
+      .sequence-wrap,
+      .step-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-step {
+        padding-left: 22px;
+        padding-top: 86px;
+      }
+
+      .step-no {
+        top: 22px;
+        left: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">PriceOS Client Architecture Note</p>
+      <h1>End-to-End Agent Working Guide</h1>
+      <p class="lede">
+        This document explains how the PriceOS agent system works across onboarding, market setup, pricing, execution,
+        monitoring, and settings changes. It is written for client-facing review, but it reflects the actual runtime
+        structure found in the current <code>Original_priceos</code> codebase.
+      </p>
+      <div class="chip-row">
+        <span class="chip live">Live runtime services</span>
+        <span class="chip setup">Setup and market seeding agents</span>
+        <span class="chip spec">Prompt-defined specialist roles</span>
+      </div>
+      <div class="note">
+        PriceOS has two views of “agents.” The client-facing view is the business role layer, such as CRO, Event
+        Intelligence, Benchmarking, and Channel Sync. Internally, those roles are implemented by a mix of AI specialist
+        agents, deterministic TypeScript services, internal API routes, and MongoDB collections that act as a shared
+        system memory.
+      </div>
+      <div class="hero-grid">
+        <div class="stat">
+          <strong>9+</strong>
+          <p>client-visible operating roles across pricing, market intelligence, sync, and guest workflows</p>
+        </div>
+        <div class="stat">
+          <strong>12</strong>
+          <p>specialist AI agent contracts defined for routing, pricing, research, guardrails, sync, and inbox support</p>
+        </div>
+        <div class="stat">
+          <strong>4</strong>
+          <p>main external data lanes: PMS, AI inference, event feeds, and market/competitor search</p>
+        </div>
+        <div class="stat">
+          <strong>10</strong>
+          <p>core shared records: Organization, Listing, Inventory, Reservation, Events, Benchmarks, Rules, Runs, Chat</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">1. System Model</p>
+          <h2>How the platform is organized internally</h2>
+        </div>
+        <p>The architecture is easiest to understand as a shared data spine in the middle, with sync and research on the left, and pricing, chat, and execution on the right.</p>
+      </div>
+      <div class="system-map">
+        <div class="lane">
+          <h3>Inbound data and setup</h3>
+          <ul>
+            <li><strong>Data Sync Agent</strong> pulls listings, calendars, and reservations from Hostaway.</li>
+            <li><strong>Onboarding route</strong> stores market choice, strategy, and organization settings.</li>
+            <li><strong>Market Research, Marketing, Benchmark, Guardrails</strong> generate initial market context.</li>
+            <li><strong>Event Feed Syncer</strong> normalizes public event feeds into one internal event format.</li>
+          </ul>
+        </div>
+        <div class="lane-center">
+          <div class="spine">
+            <h3>Shared Data Spine</h3>
+            <p>Every agent reads from or writes to the same operating memory so pricing decisions remain explainable and repeatable.</p>
+            <div class="spine-list">
+              <span>Organization</span>
+              <span>MarketTemplate</span>
+              <span>Listing</span>
+              <span>InventoryMaster</span>
+              <span>Reservation</span>
+              <span>MarketEvent</span>
+              <span>BenchmarkData</span>
+              <span>PricingRule</span>
+              <span>EngineRun</span>
+              <span>ChatMessage</span>
+            </div>
+          </div>
+        </div>
+        <div class="lane">
+          <h3>Decisioning and action</h3>
+          <ul>
+            <li><strong>CRO Router</strong> turns user questions into structured analysis and proposals.</li>
+            <li><strong>Deterministic pricing pipeline</strong> calculates proposals across the calendar.</li>
+            <li><strong>Channel Sync Agent</strong> writes approved changes back to the PMS and verifies them.</li>
+            <li><strong>Status and monitoring layer</strong> tracks engine freshness, critical findings, and sync outcomes.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">2. Business Roles</p>
+          <h2>Client-facing roles and how they map to implementation</h2>
+        </div>
+        <p>This is the cleanest language to use with a client. Each role below maps to one or more internal agents or services.</p>
+      </div>
+      <div class="role-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Business Role</th>
+              <th>What it does</th>
+              <th>Implemented by</th>
+              <th>Main outputs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Aria / CRO Router</strong><span class="role-sub">Front door for analysis and recommendations</span></td>
+              <td>Interprets user questions, frames the analysis window, and decides which specialist logic should be applied.</td>
+              <td>CRO Router prompt, DB Context Builder, optional Lyzr global context sync</td>
+              <td>Structured routing, proposal suggestions, natural-language answer</td>
+            </tr>
+            <tr>
+              <td><strong>Event Intelligence</strong><span class="role-sub">Public demand driver detection</span></td>
+              <td>Finds major events, holidays, local disruptions, and tourism demand signals that can change pricing.</td>
+              <td>EventIntelligenceAgent, Event Feed Syncer, Marketing Agent, Market Research Agent</td>
+              <td><code>MarketEvent</code> records and event impact summaries</td>
+            </tr>
+            <tr>
+              <td><strong>Competitor Benchmark</strong><span class="role-sub">External market positioning</span></td>
+              <td>Builds comp-set guidance and rate distribution bands for the selected property and date range.</td>
+              <td>Benchmark Agent plus benchmark persistence in <code>BenchmarkData</code></td>
+              <td>Median rates, recommended weekday/weekend/event prices, comp list</td>
+            </tr>
+            <tr>
+              <td><strong>Pricing Optimizer</strong><span class="role-sub">Proposal generation engine</span></td>
+              <td>Produces proposed nightly prices, min-stay rules, and optimization actions across future dates.</td>
+              <td>Deterministic <code>runPipeline()</code> engine plus pricing waterfall logic</td>
+              <td>Calendar proposals stored in <code>InventoryMaster</code>, run logs in <code>EngineRun</code></td>
+            </tr>
+            <tr>
+              <td><strong>PriceGuard / Adjustment Reviewer</strong><span class="role-sub">Safety and explainability</span></td>
+              <td>Applies floor/ceiling logic, weekend definitions, and recommendation framing before execution.</td>
+              <td>Price Guard prompt, Guardrails Agent, organization settings, listing guardrails</td>
+              <td>Safe price ranges, reasoned approval framing, guardrail suggestions</td>
+            </tr>
+            <tr>
+              <td><strong>Channel Sync Agent</strong><span class="role-sub">PMS writeback executor</span></td>
+              <td>Takes approved proposals and pushes them into the property management system.</td>
+              <td><code>ChannelSyncAgent</code> and proposal approval route</td>
+              <td>Verified PMS updates and execution audit trail</td>
+            </tr>
+            <tr>
+              <td><strong>Data Sync Agent</strong><span class="role-sub">Portfolio intake and refresh</span></td>
+              <td>Imports and refreshes listings, reservations, and date-level availability from the PMS.</td>
+              <td><code>DataSyncAgent</code> plus sync trigger route</td>
+              <td>Updated <code>Listing</code>, <code>Reservation</code>, and <code>InventoryMaster</code> records</td>
+            </tr>
+            <tr>
+              <td><strong>Reservation Agent</strong><span class="role-sub">Guest communication support</span></td>
+              <td>Drafts replies, classifies guest issues, and summarizes conversation threads.</td>
+              <td>Guest Reply Agent, Conversation Summary Agent</td>
+              <td>Reply drafts, escalation flags, inbox summaries</td>
+            </tr>
+            <tr>
+              <td><strong>Anomaly Detector</strong><span class="role-sub">Post-change monitoring</span></td>
+              <td>Monitors for abnormal pricing changes or suspicious booking behavior after action is taken.</td>
+              <td>Anomaly Detector prompt contract plus system status checks</td>
+              <td>Anomaly score, rollback recommendation, alert framing</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">3. End-to-End Runtime</p>
+          <h2>What happens step by step</h2>
+        </div>
+        <p>Each step below shows when the agent is invoked, what it receives, which APIs it touches, and what it returns into the platform.</p>
+      </div>
+      <div class="timeline">
+        <article class="timeline-step">
+          <div class="step-no">1</div>
+          <span class="label">Portfolio Connection</span>
+          <h3>PMS credentials are captured and the account is connected</h3>
+          <p>The onboarding flow starts by storing Hostaway credentials and organization progress. Once a live PMS connection exists, the import layer is able to pull real portfolio data instead of demo fixtures.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>User starts onboarding and provides Hostaway account details.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>/api/onboarding</code>, <code>DataSyncAgent</code>, organization record update.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p><code>hostawayApiKey</code>, <code>hostawayAccountId</code>, user/org identity.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Uses Hostaway. Returns connected listings and saves organization credentials.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">2</div>
+          <span class="label">Portfolio Sync</span>
+          <h3>Listings, calendars, and reservations are imported into the shared data spine</h3>
+          <p>The Data Sync Agent performs the first operational data pull so the rest of the system can reason over real inventory, availability, and booking history.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>During initial import and during later manual or scheduled sync triggers.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>DataSyncAgent.initialImport()</code>, listing sync, reservation sync, inventory sync.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p>Organization ID, Hostaway credentials, imported listing IDs.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Calls Hostaway <code>/v1/listings</code>, <code>/v1/reservations</code>, and listing calendar endpoints. Writes <code>Listing</code>, <code>Reservation</code>, <code>InventoryMaster</code>.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">3</div>
+          <span class="label alt">Market & Strategy</span>
+          <h3>The market, currency, timezone, and pricing posture are locked in</h3>
+          <p>When onboarding reaches completion, PriceOS saves the selected market, chooses the guardrail profile for the chosen strategy, and resolves template defaults such as currency and timezone.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>User completes the onboarding steps <code>connect → select → market → strategy → complete</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>/api/onboarding</code>, <code>Organization</code>, <code>MarketTemplate</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p><code>marketCode</code>, selected listings, strategy, settings overrides.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>No external API is required here. The result is updated market identity, currency, timezone, and guardrails on the org.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">4</div>
+          <span class="label alt">Market Seeding</span>
+          <h3>Market intelligence, events, and benchmark context are created</h3>
+          <p>At onboarding completion, PriceOS seeds market intelligence. In demo mode it uses static templates. In live mode it invokes AI setup agents to create live event and benchmark records for the chosen city.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>On onboarding completion, or later via <code>/api/market-setup</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p>Market Research Agent, Marketing Agent, Benchmark Agent, Guardrails Agent, event seeding logic.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p>Market template city, custom keywords, seasonal notes, property details, date range, current base price.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Uses Lyzr inference and market search prompts. Writes <code>MarketEvent</code>, <code>BenchmarkData</code>, and optional listing floor/ceiling updates.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">5</div>
+          <span class="label">Event Sync</span>
+          <h3>Public event feeds are normalized into one event layer</h3>
+          <p>The Event Intelligence service can pull events from external public feeds and cache them in a unified format so pricing logic does not depend on any single source shape.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>During explicit event sync, market refresh, or via <code>EventIntelligenceAgent.fetchAndCacheEvents()</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>EventIntelligenceAgent</code>, <code>syncEventFeeds()</code>, <code>/api/v1/system/events/sync</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p>Organization ID, resolved market city, forward window such as 90 days.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Normalizes Eventbrite, Dubai tourism/calendar feeds, RSS feeds, and Ticketmaster support in the syncer. Returns inserted and updated event counts.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">6</div>
+          <span class="label">Context Build</span>
+          <h3>The system assembles a single trusted context package for AI reasoning</h3>
+          <p>Before AI analysis, PriceOS builds a structured context object from portfolio, benchmark, reservation, inventory, and market data. That context is either embedded directly in the chat call or attached as Lyzr global context.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>User opens chat, requests analysis, or a context refresh is triggered.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>buildAgentContext()</code>, <code>lyzr-context-sync</code>, chat routes.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p>Property, metrics, reservations, inventory, benchmark, events, revenue, booking pace, selected date range.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Uses MongoDB reads and optional Lyzr context APIs. Produces one JSON truth package for all downstream AI reasoning.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">7</div>
+          <span class="label">CRO Reasoning</span>
+          <h3>Aria interprets the question and routes specialist analysis</h3>
+          <p>The CRO Router agent is the conversational orchestrator. It receives the full system context, frames the request, and can conceptually delegate to specialist roles such as Property Analyst, Booking Intelligence, Market Research, and Price Guard.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>User asks for insight, pricing advice, booking analysis, or market context.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p>CRO Router prompt, specialist prompt contracts, chat APIs.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p><code>market_context</code>, analysis window, property, metrics, inventory, reservations, benchmarks, market events, news, demand outlook.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Uses Lyzr inference. Returns JSON with routing, proposals, and client-ready chat response.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">8</div>
+          <span class="label">Pricing Run</span>
+          <h3>The deterministic pricing engine creates operational proposals</h3>
+          <p>For production calendar pricing, the codebase uses a deterministic pipeline over future dates. It reads the shared data spine and creates proposals with guardrail-aware pricing actions.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p><code>/api/engine/run-all</code> is called for all active listings or a chosen subset.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>runPipeline()</code>, pricing waterfall, rule application, engine run logging.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p><code>Listing</code>, <code>PricingRule</code>, <code>InventoryMaster</code>, event signals, strategy settings, floors and ceilings.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>No external API is needed. Outputs proposal fields back into <code>InventoryMaster</code> and run records into <code>EngineRun</code>.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">9</div>
+          <span class="label">Approval & Writeback</span>
+          <h3>Approved proposals are pushed to the PMS and verified</h3>
+          <p>Once a proposal is approved, the Channel Sync Agent executes the change against the PMS, then reads back the result to confirm that the update actually landed.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>User approves a proposal via <code>/api/proposals/[id]/approve</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p>Proposal approval route, <code>ChannelSyncAgent.executeProposal()</code>.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p>Proposal ID, listing ID, approved day-level changes, PMS credentials.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Uses Hostaway calendar interval update plus readback verification. Returns success, updated days, verification state, and execution timestamp.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="timeline-step">
+          <div class="step-no">10</div>
+          <span class="label">Monitoring & Guest Ops</span>
+          <h3>Status, anomaly detection, and guest communication run as support layers</h3>
+          <p>After pricing decisions are made, the platform surfaces operational health, can classify anomalies, and supports guest communication workflows using reservation-aware context.</p>
+          <div class="step-grid">
+            <div class="step-box">
+              <h4>Invoked when</h4>
+              <p>Agent status screen loads, guest inbox actions occur, or monitoring workflows are triggered.</p>
+            </div>
+            <div class="step-box">
+              <h4>Components</h4>
+              <p><code>/api/agents/status</code>, Anomaly Detector prompt, Guest Reply Agent, Conversation Summary Agent.</p>
+            </div>
+            <div class="step-box">
+              <h4>Input</h4>
+              <p>Engine run freshness, proposal changes, booking snapshots, reservation threads, listing context.</p>
+            </div>
+            <div class="step-box">
+              <h4>APIs and output</h4>
+              <p>Uses Lyzr inference plus DB context. Returns health state, anomaly scores, reply drafts, summaries, and escalation flags.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">4. Specialist AI Agent Catalogue</p>
+          <h2>Internal agent contracts, inputs, outputs, and data sources</h2>
+        </div>
+        <p>The rows below combine active runtime agents and prompt-defined specialist roles. This is the best end-to-end inventory for client explanation.</p>
+      </div>
+      <div class="catalogue-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Invoked when</th>
+              <th>Input it receives</th>
+              <th>Data it returns</th>
+              <th>APIs / sources used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>CRO Router</strong><span class="chip live">Live</span></td>
+              <td>When the user chats with Aria or requests analysis.</td>
+              <td><code>market_context</code>, analysis window, property, metrics, inventory, reservations, benchmark, events, news, daily events, demand outlook.</td>
+              <td><code>routing</code>, <code>proposals</code>, <code>chat_response</code>.</td>
+              <td>Lyzr inference plus internal DB context.</td>
+            </tr>
+            <tr>
+              <td><strong>Property Analyst</strong><span class="chip spec">Specialist</span></td>
+              <td>When the system needs property-level diagnosis.</td>
+              <td>Property, metrics, available dates, inventory, recent reservations, benchmark, market events.</td>
+              <td><code>gap_nights</code>, <code>restrictions</code>, <code>seasonal</code>, <code>revenue</code>, <code>summary</code>.</td>
+              <td>Lyzr inference using cached internal data.</td>
+            </tr>
+            <tr>
+              <td><strong>Booking Intelligence</strong><span class="chip spec">Specialist</span></td>
+              <td>When pacing, lead time, and reservation behavior need analysis.</td>
+              <td>Metrics, reservations, benchmark, market events.</td>
+              <td><code>velocity</code>, <code>length_of_stay</code>, <code>revenue</code>, <code>day_of_week</code>, <code>event_correlation</code>, <code>benchmark_comparison</code>.</td>
+              <td>Lyzr inference using reservation history and benchmark cache.</td>
+            </tr>
+            <tr>
+              <td><strong>Market Research</strong><span class="chip setup">Setup</span></td>
+              <td>On live onboarding and market setup refresh.</td>
+              <td>Market, city, date range, selected property context, event hints.</td>
+              <td>Structured events, holidays, demand signals, competitive positioning summary.</td>
+              <td>Lyzr inference with search-style research prompts and current market framing.</td>
+            </tr>
+            <tr>
+              <td><strong>Marketing Intelligence</strong><span class="chip setup">Setup</span></td>
+              <td>When broader market context must include holidays, news, disruptions, and tourism signals.</td>
+              <td>Today’s date, market city, area, date range, property specs, seasonal notes, custom keywords.</td>
+              <td><code>events</code>, <code>holidays</code>, <code>news</code>, <code>daily_events</code>, <code>demand_outlook</code>.</td>
+              <td>Lyzr inference, search-oriented prompt logic, public web intelligence.</td>
+            </tr>
+            <tr>
+              <td><strong>Benchmark Agent</strong><span class="chip setup">Setup</span></td>
+              <td>On market setup and benchmark refresh.</td>
+              <td>Market city, area, bedrooms, base price, date range.</td>
+              <td><code>comps</code>, <code>rate_distribution</code>, <code>pricing_verdict</code>, <code>rate_trend</code>, <code>recommended_rates</code>.</td>
+              <td>Lyzr inference and competitor search over OTA-like market signals.</td>
+            </tr>
+            <tr>
+              <td><strong>Price Guard</strong><span class="chip spec">Specialist</span></td>
+              <td>When AI pricing verdicts or recommendation safety framing are needed.</td>
+              <td>Market context, property, metrics, benchmark, events, news, demand outlook, inventory.</td>
+              <td><code>guardrail_profile_applied</code>, <code>weekend_definition_applied</code>, per-date pricing verdicts and risk explanations.</td>
+              <td>Lyzr inference over internal context and guardrail settings.</td>
+            </tr>
+            <tr>
+              <td><strong>Guardrails Agent</strong><span class="chip setup">Setup</span></td>
+              <td>When floor and ceiling are not yet set for a listing.</td>
+              <td>Property details, market identity, benchmark percentiles.</td>
+              <td><code>suggested_floor</code>, <code>suggested_ceiling</code>, reasoning, confidence, comp anchors.</td>
+              <td>Lyzr inference using benchmark context.</td>
+            </tr>
+            <tr>
+              <td><strong>Channel Sync Agent</strong><span class="chip live">Live</span></td>
+              <td>After proposal approval.</td>
+              <td>Listing ID, Hostaway listing ID, proposals, PMS type, API key, authorization, batch ID.</td>
+              <td>Execution status, per-date write results, verification state, error details if any.</td>
+              <td>Hostaway write APIs and readback verification.</td>
+            </tr>
+            <tr>
+              <td><strong>Anomaly Detector</strong><span class="chip spec">Specialist</span></td>
+              <td>After price changes or if monitoring detects suspicious conditions.</td>
+              <td>Listing ID, batch ID, price changes, booking snapshots, comp ADR, last sync time.</td>
+              <td><code>anomaly_score</code>, severity, anomalies, rollback recommendation, rollback dates, CRO alert.</td>
+              <td>Lyzr inference using execution and booking state.</td>
+            </tr>
+            <tr>
+              <td><strong>Guest Reply Agent</strong><span class="chip spec">Specialist</span></td>
+              <td>When guest inbox messages need a reply draft.</td>
+              <td>Market context and optional lookup data from listings, reservations, inventory, events.</td>
+              <td><code>reply</code>, sentiment, category, escalation requirement, tables queried.</td>
+              <td>Lyzr inference with reservation-aware internal data.</td>
+            </tr>
+            <tr>
+              <td><strong>Conversation Summary Agent</strong><span class="chip spec">Specialist</span></td>
+              <td>When the inbox view needs thread condensation for operators.</td>
+              <td>Property name, listing ID, date range, conversation threads.</td>
+              <td>Sentiment, themes, action items, bullet summary, total conversations, needs-reply count.</td>
+              <td>Lyzr inference over synced conversation content.</td>
+            </tr>
+            <tr>
+              <td><strong>Data Sync Agent</strong><span class="chip live">Live service</span></td>
+              <td>At portfolio import and later sync refreshes.</td>
+              <td>Organization ID, Hostaway credentials, listing scope.</td>
+              <td>Updated listings, reservations, and date-level inventory state.</td>
+              <td>Hostaway listing, reservation, and calendar APIs.</td>
+            </tr>
+            <tr>
+              <td><strong>Event Intelligence Agent</strong><span class="chip live">Live service</span></td>
+              <td>When the platform needs cached event coverage for a market window.</td>
+              <td>Date range or organization ID for fetch-and-cache mode.</td>
+              <td>Event signals, event summary, cached insert/update count.</td>
+              <td>Mongo event cache plus public event feeds through the syncer.</td>
+            </tr>
+            <tr>
+              <td><strong>DB Context Builder</strong><span class="chip live">Live service</span></td>
+              <td>Before chat and AI analysis.</td>
+              <td>Listing ID, date range, shared data spine records.</td>
+              <td>One structured JSON context package for all downstream agents.</td>
+              <td>Internal database only, with optional Lyzr global context attachment.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">5. External Data and APIs</p>
+          <h2>Where each class of information comes from</h2>
+        </div>
+        <p>PriceOS does not rely on one API. It combines PMS truth, AI inference, and public market signals into one operating memory.</p>
+      </div>
+      <div class="api-grid">
+        <article class="api-card">
+          <h3>Hostaway API</h3>
+          <ul>
+            <li>Used for listing import, reservation sync, calendar read, and calendar writeback.</li>
+            <li>Main lane for operational truth about the managed portfolio.</li>
+            <li>Also used for verification after price changes are executed.</li>
+          </ul>
+        </article>
+        <article class="api-card">
+          <h3>Lyzr Inference API</h3>
+          <ul>
+            <li>Used by CRO Router, market setup agents, benchmarking, guardrails, and guest communication agents.</li>
+            <li>Receives structured prompts plus PriceOS context and returns JSON-shaped specialist outputs.</li>
+            <li>Also supports global context attachment for richer agent memory.</li>
+          </ul>
+        </article>
+        <article class="api-card">
+          <h3>Public Event Feeds</h3>
+          <ul>
+            <li>Normalized by the Event Feed Syncer into the <code>MarketEvent</code> collection.</li>
+            <li>Current syncer includes Eventbrite, Dubai tourism/calendar sources, RSS-based market feeds, and Ticketmaster support.</li>
+            <li>Used to explain peaks, uplift opportunities, and demand spikes.</li>
+          </ul>
+        </article>
+        <article class="api-card">
+          <h3>Market Search Signals</h3>
+          <ul>
+            <li>Used mainly during live market setup and benchmark generation.</li>
+            <li>Includes search-oriented prompts for local events, news, holidays, comp sets, and market sentiment.</li>
+            <li>Persisted into events and benchmark records so later runs do not need to rediscover everything from scratch.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">6. Settings Change Behavior</p>
+          <h2>What happens when market configuration is changed in Settings</h2>
+        </div>
+        <p>This is the most important lifecycle question for a client because it changes which city, currency, timezone, keywords, and demand signals the system should follow.</p>
+      </div>
+      <div class="sequence-wrap">
+        <div class="sequence">
+          <strong>Immediate effects when Settings are saved</strong>
+          <ul>
+            <li><code>/api/organizations</code> updates the <code>Organization</code> record.</li>
+            <li>If <code>marketCode</code> changes and no currency override is supplied, the route pulls the new market’s default currency and timezone from <code>MarketTemplate</code>.</li>
+            <li>The organization immediately starts reporting the new market identity back to the frontend.</li>
+            <li>Any future context build will see the new market on the organization record.</li>
+          </ul>
+        </div>
+        <div class="sequence">
+          <strong>What changes on the next market-analysis run</strong>
+          <ul>
+            <li><code>/api/market-setup</code> reads the new <code>marketCode</code>.</li>
+            <li>It switches to the new template city, custom event keywords, and seasonal notes.</li>
+            <li>The Marketing and Benchmark agents now research the new market.</li>
+            <li>New <code>MarketEvent</code> and <code>BenchmarkData</code> records are generated for that market context.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mini-grid">
+        <div class="sequence">
+          <strong>What changes on the next event refresh</strong>
+          <ul>
+            <li><code>EventIntelligenceAgent.fetchAndCacheEvents()</code> looks up the organization’s current <code>marketCode</code>.</li>
+            <li>It reads the linked <code>MarketTemplate.eventApiConfig</code> and resolves the correct city.</li>
+            <li>The syncer then fetches and caches events for the new city rather than the old one.</li>
+          </ul>
+        </div>
+        <div class="sequence">
+          <strong>What does not happen automatically</strong>
+          <ul>
+            <li>Old <code>MarketEvent</code> rows are not automatically deleted or archived by the settings update route.</li>
+            <li>Old benchmark data is not automatically regenerated by the settings update route alone.</li>
+            <li>Existing pricing rules are not automatically re-seeded just because <code>marketCode</code> changed in Settings.</li>
+            <li>A plain settings save does not itself rerun the pricing engine.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top: 18px;">
+        <strong>Recommended client-safe sequence after a market change:</strong>
+        save the organization settings, rerun market setup, refresh event feeds, then rerun the pricing engine. This ensures that new market identity, new events, new benchmarks, and new proposals all align with each other.
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">7. Operational Summary</p>
+          <h2>The simplest way to explain PriceOS to a client</h2>
+        </div>
+        <p>If you need one concise narrative, this is the message.</p>
+      </div>
+      <div class="signal-grid">
+        <article class="card">
+          <h3>Step 1: collect truth</h3>
+          <p>PriceOS first pulls portfolio truth from the PMS and market truth from public demand signals and market research agents.</p>
+        </article>
+        <article class="card">
+          <h3>Step 2: build context</h3>
+          <p>The platform assembles listings, inventory, reservations, events, benchmark bands, and guardrails into one explainable operating memory.</p>
+        </article>
+        <article class="card">
+          <h3>Step 3: decide safely</h3>
+          <p>AI agents interpret the context, while the deterministic pricing engine creates day-level proposals inside floor, ceiling, and strategy limits.</p>
+        </article>
+        <article class="card">
+          <h3>Step 4: execute carefully</h3>
+          <p>Only approved proposals are pushed to the PMS, and every write is verified before the system considers it complete.</p>
+        </article>
+        <article class="card">
+          <h3>Step 5: monitor continuously</h3>
+          <p>Status checks, anomaly logic, and guest support agents keep the portfolio operational after pricing changes are live.</p>
+        </article>
+        <article class="card">
+          <h3>Step 6: adapt by market</h3>
+          <p>When the market changes, the organization template changes first, then the research, event sync, benchmark, and pricing layers refresh around the new city.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Prepared as a client-facing explainer for the <code>Original_priceos</code> codebase. This guide reflects both
+        currently wired runtime services and the specialist prompt contracts that define the full operating model.
+      </p>
+    </footer>
+  </main>
+</body>
+</html>
