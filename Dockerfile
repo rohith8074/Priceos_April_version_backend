@@ -16,8 +16,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install dependencies
 COPY requirements.txt .
+# --force-reinstall ensures motor and pymongo are reinstalled at the pinned
+# versions even when Railway replays a cached pip layer with motor 2.x.
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir --index-url https://pypi.org/simple/ --force-reinstall "motor==3.5.1" "pymongo>=4.5.0,<5.0.0" \
+    && pip install --no-cache-dir --index-url https://pypi.org/simple/ -r requirements.txt
 
 # Final stage
 FROM python:3.11-slim
@@ -43,5 +46,7 @@ RUN rm -f .env
 # Expose port
 EXPOSE 8000
 
-# Start command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# start.sh force-reinstalls motor/pymongo at container start to override any
+# cached wrong versions in the Railway image layer.
+RUN chmod +x /app/start.sh
+CMD ["/app/start.sh"]
